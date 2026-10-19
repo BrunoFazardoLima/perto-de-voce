@@ -4,3 +4,4 @@
 @media(max-width:600px){.footer .wrap{display:flex;flex-direction:column;gap:10px}}
 .classification-panel{background:#f5f8f0;margin-top:24px!important}.classification-panel>label{display:flex;flex-direction:column;gap:7px;margin:15px 0;font-size:14px;font-weight:650}.classification-panel [data-service-classification]>label{display:flex;flex-direction:column;gap:7px;margin-top:20px;font-size:14px;font-weight:650}.classification-panel .check-grid{margin:12px 0}.classification-suggestions{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:16px 0}.classification-suggestions button{text-align:left;line-height:1.5}.classification-panel input,.classification-panel textarea{min-width:0}
 .form-panel p,.form-panel h2,.classification-suggestions button{overflow-wrap:anywhere}.classification-suggestions button{max-width:100%}
+.submit-reason{margin-top:24px}.submit-reason.error{color:#9c382d;font-weight:650}

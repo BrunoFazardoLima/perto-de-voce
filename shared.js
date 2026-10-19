@@ -20,16 +20,16 @@
     const headers={apikey:key,'Content-Type':'application/json'};
     if(options.token) headers.Authorization=`Bearer ${options.token}`;
     else if(key.startsWith('eyJ')) headers.Authorization=`Bearer ${key}`;
-    let response;
-    try { response=await fetch(url+path,{method:options.method||'GET',headers,body:options.body?JSON.stringify(options.body):undefined,signal:AbortSignal.timeout(15000)}); }
-    catch {throw new Error('Não foi possível conectar. Confira sua internet e tente novamente.');}
-    const data=await response.json().catch(()=>null);
+    let response,data;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+    try { response=await fetch(url+path,{method:options.method||'GET',headers,body:options.body?JSON.stringify(options.body):undefined,signal:controller.signal});const text=await response.text();data=text?JSON.parse(text):null; }
+    catch(cause){const error=new Error(controller.signal.aborted?'A conexão demorou mais que o esperado. Tente novamente.':'Não foi possível conectar. Confira sua internet e tente novamente.');error.code=controller.signal.aborted?'timeout':'network';throw error;}
+    finally{clearTimeout(timeout);}
     if(!response.ok) {
       if(response.status===401) throw new Error('E-mail ou senha inválidos, ou sessão expirada.');
       if(response.status===403) throw new Error('Sua conta não tem permissão para esta ação.');
       if(data?.message?.includes('recent_submission')) throw new Error('Já recebemos um cadastro recente com esses dados. Aguarde a análise.');
       if(data?.message?.includes('invalid_classification')||data?.message?.includes('classification_required')) throw new Error('Selecione a categoria e pelo menos uma especialidade válida antes de aprovar.');
-      throw new Error('Não foi possível concluir a ação. Confira os dados e tente novamente.');
+      const error=new Error('Não foi possível concluir a ação. Confira os dados e tente novamente.');error.code=data?.code;error.status=response.status;throw error;
     }
     return data;
   }
