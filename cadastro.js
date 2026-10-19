@@ -1,0 +1,29 @@
+(() => {
+  const {taxonomy,neighborhoods,escape:esc,backend}=Guide;
+  const $=id=>document.getElementById(id),form=$('registrationForm');
+  const notice=$('connectionNotice');
+  notice.textContent=backend.configured?'Seu cadastro será enviado para análise. A publicação acontece após aprovação.':'O recebimento de cadastros ainda está em preparação. Você pode preencher e conferir o formulário, mas o envio ainda não está disponível.';
+  $('submitButton').disabled=!backend.configured;
+  $('areaOptions').innerHTML=neighborhoods.map(n=>`<label class="check-line"><input type="checkbox" name="areas" value="${n}"> ${n}</label>`).join('');
+  $('addressNeighborhood').innerHTML='<option value="">Selecione o bairro</option>'+neighborhoods.map(n=>`<option>${n}</option>`).join('');
+  function specialties(){const list=taxonomy[$('businessType').value][$('businessCategory').value]||[];$('specialtyOptions').innerHTML=list.map(s=>`<label class="check-line"><input type="checkbox" name="specialties" value="${s}"> ${s}</label>`).join('');}
+  function address(){const has=$('hasLocation').checked;$('addressBlock').hidden=!has;$('addressInput').required=has;$('addressNeighborhood').required=has;$('mobileServiceNote').hidden=has;}
+  function type(){const service=$('businessType').value==='Serviço';$('businessCategory').innerHTML=Object.keys(taxonomy[$('businessType').value]).map(c=>`<option>${esc(c)}</option>`).join('');$('specialtiesBlock').hidden=!service;$('areasBlock').hidden=!service;$('physicalLabel').hidden=!service;$('hasLocation').checked=!service;specialties();address();}
+  function payload(){
+    const fd=new FormData(form),service=fd.get('type')==='Serviço',has=fd.get('hasLocation')==='on',phone=String(fd.get('phone')).replace(/\D/g,'');
+    if(!form.reportValidity())return null;
+    if(!/^\d{10,11}$/.test(phone))throw new Error('Informe um telefone com DDD e 10 ou 11 dígitos.');
+    const specialties=service?fd.getAll('specialties'):[],areas=service?fd.getAll('areas'):[];
+    if(service&&!specialties.length)throw new Error('Selecione pelo menos uma especialidade.');
+    if(service&&!areas.length)throw new Error('Selecione pelo menos um bairro atendido.');
+    const instagram=String(fd.get('instagram')).trim();
+    if(instagram&&!/^https:\/\/(www\.)?instagram\.com\//i.test(instagram))throw new Error('Informe o link completo do Instagram, começando com https://www.instagram.com/.');
+    if(fd.get('company_website'))throw new Error('Não foi possível validar o cadastro.');
+    return {type:fd.get('type'),category:fd.get('category'),name:String(fd.get('name')).trim(),description:String(fd.get('description')).trim(),specialties,areas,has_location:has,address:has?String(fd.get('address')).trim():'',neighborhood:has?fd.get('neighborhood'):'',phone,whatsapp:fd.get('whatsapp')==='on',hours:String(fd.get('hours')).trim(),instagram,owner_email:String(fd.get('owner_email')).trim().toLowerCase(),consent:fd.get('consent')==='on'};
+  }
+  function message(text,error=false){$('formMessage').textContent=text;$('formMessage').classList.toggle('error',error);}
+  $('businessType').addEventListener('change',type);$('businessCategory').addEventListener('change',specialties);$('hasLocation').addEventListener('change',address);
+  $('previewButton').addEventListener('click',()=>{try{const p=payload();if(!p)return;message('');$('previewContent').innerHTML=`<h3>${esc(p.name)}</h3><p>${esc(p.type)} · ${esc(p.category)}</p><p>${esc(p.description)}</p>${p.specialties.length?`<p><strong>Especialidades:</strong> ${esc(p.specialties.join(', '))}</p>`:''}${p.areas.length?`<p><strong>Atende:</strong> ${esc(p.areas.join(', '))}</p>`:''}${p.has_location?`<p><strong>Endereço:</strong> ${esc(p.address)}, ${esc(p.neighborhood)}</p>`:''}<p><strong>Contato:</strong> ${esc(p.phone)}${p.whatsapp?' · WhatsApp':''}</p>${p.hours?`<p><strong>Horários:</strong> ${esc(p.hours)}</p>`:''}`;$('registrationPreview').hidden=false;$('registrationPreview').scrollIntoView({behavior:'smooth'});}catch(e){message(e.message,true);}});
+  form.addEventListener('submit',async e=>{e.preventDefault();if(!backend.configured){message('O envio ainda não foi ativado.',true);return;}try{const p=payload();if(!p)return;$('submitButton').disabled=true;message('Enviando cadastro…');await backend.submit(p);message('Cadastro recebido! Ele ficará em análise e será publicado após aprovação.');form.reset();type();$('registrationPreview').hidden=true;}catch(e){message(e.message,true);}finally{$('submitButton').disabled=false;}});
+  type();
+})();

@@ -1,0 +1,25 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cadastre seu negócio — Perto de Você</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body>
+<header class="top"><div class="wrap nav"><a class="brand brand-link" href="index.html"><span class="mark">⌂</span>Perto de Você</a><a href="index.html">← Voltar ao guia</a></div></header>
+<main class="wrap form-page"><div class="eyebrow">Faça parte da vizinhança</div><h1>Cadastre seu negócio ou serviço</h1><p class="intro">Preencha seus dados. Vamos analisar o cadastro antes de publicá-lo no guia.</p>
+<p class="notice" id="connectionNotice" role="status"></p>
+<form id="registrationForm" class="form-panel">
+<div class="form-grid"><label>Tipo de cadastro<select id="businessType" name="type"><option>Comércio</option><option>Serviço</option></select></label><label>Categoria<select id="businessCategory" name="category" required></select></label></div>
+<fieldset id="specialtiesBlock" hidden><legend>Especialidades <span class="required">*</span></legend><p class="muted">Marque tudo o que você oferece.</p><div class="check-grid" id="specialtyOptions"></div></fieldset>
+<label>Nome do estabelecimento ou profissional<input name="name" required minlength="2" maxlength="120" autocomplete="organization" placeholder="Como seu negócio é conhecido"></label>
+<label>Produtos ou serviços oferecidos<textarea name="description" required minlength="10" maxlength="1000" rows="4" placeholder="Descreva o que os moradores podem encontrar com você."></textarea></label>
+<fieldset id="areasBlock" hidden><legend>Bairros atendidos <span class="required">*</span></legend><div class="check-grid" id="areaOptions"></div></fieldset>
+<label class="check-line" id="physicalLabel"><input type="checkbox" id="hasLocation" name="hasLocation" checked> Tenho um endereço para atendimento ao público</label>
+<div id="addressBlock" class="form-grid"><label>Rua e número<input name="address" id="addressInput" required maxlength="200" autocomplete="street-address" placeholder="Ex.: Rua Ravena, 100"></label><label>Bairro do endereço<select name="neighborhood" id="addressNeighborhood" required></select></label></div>
+<p class="muted" id="mobileServiceNote" hidden>Seu cadastro mostrará os bairros atendidos. O endereço de sua residência não é necessário.</p>
+<div class="form-grid"><label>Telefone com DDD<input name="phone" type="tel" required maxlength="20" autocomplete="tel-national" placeholder="(19) 99999-9999"></label><label>Horário de atendimento<input name="hours" maxlength="400" placeholder="Ex.: Segunda a sexta, das 8h às 18h"></label></div>
+<label class="check-line"><input name="whatsapp" type="checkbox"> Este telefone recebe WhatsApp</label>
+<label>Instagram <span class="optional">(opcional)</span><input name="instagram" type="url" maxlength="300" placeholder="https://www.instagram.com/seunegocio/"></label>
+<label>E-mail do responsável<input name="owner_email" type="email" required maxlength="254" autocomplete="email"><span class="muted">Usado para tratar do cadastro. Não aparecerá no guia.</span></label>
+<label class="honey" aria-hidden="true">Deixe vazio<input name="company_website" tabindex="-1" autocomplete="off"></label>
+<label class="check-line"><input type="checkbox" name="consent" required> Sou responsável pelo negócio e autorizo a publicação dos dados de atendimento informados, incluindo telefone e endereço, se preenchido.</label>
+<div class="form-actions"><button class="primary" type="button" id="previewButton">Conferir cadastro</button><button class="primary" type="submit" id="submitButton" disabled>Enviar para análise</button></div>
+<p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
+</form>
+<section id="registrationPreview" class="form-panel preview-panel" hidden aria-labelledby="previewTitle"><div class="eyebrow">Antes de enviar</div><h2 id="previewTitle">Confira como seu cadastro será apresentado</h2><div id="previewContent"></div><p class="muted">Esta conferência ainda não envia nem publica o cadastro.</p></section>
+</main><footer class="footer"><div class="wrap"><a href="index.html">Voltar ao guia</a><span>Americana, SP · Perto de Você</span></div></footer>
+<script src="config.js"></script><script src="shared.js"></script><script src="cadastro.js"></script></body></html>
