@@ -10,6 +10,9 @@
   };
   const escape = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const labelKey = value => normalize(value).replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
+  let catalog=Object.entries(taxonomy).flatMap(([type,categories],t)=>Object.entries(categories).map(([name,specialties],c)=>({id:`local-${t}-${c}`,type,name,specialties:specialties.map((name,s)=>({id:`local-${t}-${c}-${s}`,name}))})));
+  function useCatalog(rows){catalog=rows;for(const type of ['Comércio','Serviço']){taxonomy[type]={};for(const c of rows.filter(c=>c.type===type))taxonomy[type][c.name]=c.specialties.map(s=>s.name);}}
   const https = value => {try { const u=new URL(value); return u.protocol==='https:'?u.href:null; } catch { return null; }};
   const mapUrl = p => p.hasLocation === false || !p.address ? null : (p.source?.startsWith('https://www.google.com/maps/place/') ? p.source : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.name}, ${p.address}, ${p.neighborhood}, Americana, SP`)}`);
   async function request(path, options={}) {
@@ -25,6 +28,7 @@
       if(response.status===401) throw new Error('E-mail ou senha inválidos, ou sessão expirada.');
       if(response.status===403) throw new Error('Sua conta não tem permissão para esta ação.');
       if(data?.message?.includes('recent_submission')) throw new Error('Já recebemos um cadastro recente com esses dados. Aguarde a análise.');
+      if(data?.message?.includes('invalid_classification')||data?.message?.includes('classification_required')) throw new Error('Selecione a categoria e pelo menos uma especialidade válida antes de aprovar.');
       throw new Error('Não foi possível concluir a ação. Confira os dados e tente novamente.');
     }
     return data;
@@ -33,6 +37,7 @@
   function session(){try{const s=JSON.parse(sessionStorage.getItem(sessionKey));if(s?.expires_at>Date.now()/1000)return s;sessionStorage.removeItem(sessionKey);}catch{}return null;}
   async function login(email,password){const s=await request('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});const rows=await request(`/rest/v1/guide_admins?select=user_id&user_id=eq.${encodeURIComponent(s.user.id)}`,{token:s.access_token});if(!rows?.length)throw new Error('Esta conta ainda não foi habilitada para aprovar cadastros.');const saved={access_token:s.access_token,expires_at:Date.now()/1000+s.expires_in};sessionStorage.setItem(sessionKey,JSON.stringify(saved));}
   async function logout(){const s=session();sessionStorage.removeItem(sessionKey);if(s)await request('/auth/v1/logout',{method:'POST',token:s.access_token}).catch(()=>{});}
-  const backend={configured,login,logout,session,publicPlaces:()=>request('/rest/v1/guide_listings?select=*&order=name.asc'),submit:payload=>request('/rest/v1/rpc/submit_listing',{method:'POST',body:{payload}}),pending:()=>request('/rest/v1/guide_submissions?select=*&status=eq.pending&order=created_at.asc',{token:session()?.access_token}),review:(id,decision)=>request('/rest/v1/rpc/review_submission',{method:'POST',token:session()?.access_token,body:{submission_id:id,decision}})};
-  window.Guide={neighborhoods,taxonomy,escape,normalize,https,mapUrl,backend};
+  async function publicCatalog(){const [categories,specialties]=await Promise.all([request('/rest/v1/guide_categories?select=id,type,name&order=name.asc'),request('/rest/v1/guide_specialties?select=id,category_id,name&order=name.asc')]);return categories.map(c=>({...c,specialties:specialties.filter(s=>s.category_id===c.id)}));}
+  const backend={configured,login,logout,session,catalog:publicCatalog,publicPlaces:()=>request('/rest/v1/guide_listings?select=*&order=name.asc'),submit:payload=>request('/rest/v1/rpc/submit_listing',{method:'POST',body:{payload}}),pending:()=>request('/rest/v1/guide_submissions?select=*&status=eq.pending&order=created_at.asc',{token:session()?.access_token}),review:(id,decision,classification=null)=>request('/rest/v1/rpc/review_submission',{method:'POST',token:session()?.access_token,body:{submission_id:id,decision,classification}})};
+  window.Guide={neighborhoods,taxonomy,escape,normalize,labelKey,https,mapUrl,backend,useCatalog,getCatalog:()=>catalog};
 })();

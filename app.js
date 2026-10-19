@@ -10,7 +10,8 @@
     if(!cats.includes(category))category='Todas';
     $('categories').innerHTML=cats.map(c=>`<button class="${c===category?'active':''}" data-category="${esc(c)}" aria-pressed="${c===category}">${esc(c)}</button>`).join('');
     $('specialtyFilter').hidden=type!=='Serviço';
-    const specs=['Todas',...(category==='Todas'?Object.values(taxonomy.Serviço).flat():taxonomy.Serviço[category]||[])];
+    const names=[...(category==='Todas'?Object.values(taxonomy.Serviço).flat():taxonomy.Serviço[category]||[]),...places.filter(p=>p.type==='Serviço'&&(category==='Todas'||p.category===category)).flatMap(p=>p.specialties||[])];
+    const specs=['Todas',...new Map(names.map(n=>[Guide.labelKey(n),n])).values()];
     if(!specs.includes(specialty))specialty='Todas';
     $('specialtySelect').innerHTML=specs.map(s=>`<option ${s===specialty?'selected':''}>${esc(s)}</option>`).join('');
   }
@@ -60,5 +61,5 @@
     if(e.key==='Tab'){const nodes=[...$('backdrop').querySelectorAll('button,a[href]')];const first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
   });
   render();
-  if(backend.configured)backend.publicPlaces().then(data=>{places=data.map(({has_location,...p})=>({...p,hasLocation:has_location}));render();}).catch(()=>{$('loadMessage').textContent='Não foi possível atualizar os dados online. Exibindo a seleção inicial do guia.';});
+  if(backend.configured)Promise.allSettled([backend.publicPlaces(),backend.catalog()]).then(([listingResult,catalogResult])=>{if(listingResult.status==='fulfilled')places=listingResult.value.map(({has_location,...p})=>({...p,hasLocation:has_location}));else $('loadMessage').textContent='Não foi possível atualizar os dados online. Exibindo a seleção inicial do guia.';if(catalogResult.status==='fulfilled')Guide.useCatalog(catalogResult.value);render();});
 })();
