@@ -2,6 +2,7 @@
   const {taxonomy,neighborhoods,escape:esc,backend}=Guide;
   const $=id=>document.getElementById(id),form=$('registrationForm');
   let classificationReady=false,loading=false,sending=false;
+  form.addEventListener('input',()=>window.GuideAnalytics?.track('registration_start'),{once:true});
   const notice=$('connectionNotice');
   notice.textContent=backend.configured?'Seu cadastro será enviado para análise. A publicação acontece após aprovação.':'O recebimento de cadastros ainda está em preparação. Você pode preencher e conferir o formulário, mas o envio ainda não está disponível.';
   $('submitButton').disabled=true;
@@ -53,7 +54,7 @@
   }
   $('businessType').addEventListener('change',type);$('businessCategory').addEventListener('change',specialties);$('hasLocation').addEventListener('change',address);
   $('previewButton').addEventListener('click',()=>{try{const p=payload();if(!p)return;message('');$('previewContent').innerHTML=`<h3>${esc(p.name)}</h3><p>${esc(p.type)} · ${esc(p.category)}</p><p>${esc(p.description)}</p>${p.requested_service?`<p><strong>Serviço informado:</strong> ${esc(p.requested_service)}</p>`:''}${p.specialties.length?`<p><strong>Especialidades:</strong> ${esc(p.specialties.join(', '))}</p>`:''}${p.areas.length?`<p><strong>Atende:</strong> ${esc(p.areas.join(', '))}</p>`:''}${p.has_location?`<p><strong>Endereço:</strong> ${esc(p.address)}, ${esc(p.neighborhood)}</p>`:''}<p><strong>Contato:</strong> ${esc(p.phone)}${p.whatsapp?' · WhatsApp':''}</p>${p.hours?`<p><strong>Horários:</strong> ${esc(p.hours)}</p>`:''}`;$('registrationPreview').hidden=false;$('registrationPreview').scrollIntoView({behavior:'smooth'});}catch(e){message(e.message,true);}});
-  form.addEventListener('submit',async e=>{e.preventDefault();if(sending)return;if(!backend.configured||!classificationReady){message($('submitReason').textContent,true);return;}try{const p=payload();if(!p)return;sending=true;$('submitButton').disabled=true;message('Enviando cadastro…');await backend.submit(p);message('Cadastro recebido! Ele ficará em análise e será publicado após aprovação.');form.reset();type();$('registrationPreview').hidden=true;}catch(e){message(e.message,true);}finally{sending=false;$('submitButton').disabled=!classificationReady;}});
+  form.addEventListener('submit',async e=>{e.preventDefault();if(sending)return;if(!backend.configured||!classificationReady){message($('submitReason').textContent,true);return;}try{const p=payload();if(!p)return;sending=true;$('submitButton').disabled=true;message('Enviando cadastro…');await backend.submit(p);window.GuideAnalytics?.track('registration_submit');message('Cadastro recebido! Ele ficará em análise e será publicado após aprovação.');form.reset();type();$('registrationPreview').hidden=true;}catch(e){message(e.message,true);}finally{sending=false;$('submitButton').disabled=!classificationReady;}});
   $('retryConnection').addEventListener('click',loadCatalog);
   type();
   loadCatalog();
