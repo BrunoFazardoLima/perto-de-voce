@@ -1,7 +1,6 @@
-// Configuração independente do Supabase. Este ID é público, não é uma senha.
-// Depois de criar um fluxo Web no Google Analytics, preencha G-XXXXXXXXXX.
+// Google Analytics do Perto de Você. O ID de medição é público.
+// A integração analytics.js inicia a coleta somente após aceitar estatísticas.
 window.GUIDE_ANALYTICS_CONFIG = {
-  measurementId: '',
-  // Ao trocar de domínio, atualize também canonical, og:url e sitemap.xml.
-  allowedOrigins: ['https://brunofazardolima.github.io']
+  measurementId: 'G-5RPN3ZH9DZ',
+  allowedOrigins: ['https://pertodevoce.app.br']
 };
